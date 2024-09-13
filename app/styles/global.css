@@ -1,0 +1,126 @@
+body {
+  margin: 0;
+  color: rgb(41, 41, 41);
+  font-family: system-ui, sans-serif;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+a {
+  color: rgb(41, 41, 41);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  line-height: 1.4;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+}
+
+.section {
+  margin-bottom: 4rem;
+  margin-top: 4rem;
+}
+
+.section__title {
+  font-size: 3.25rem;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.section--narrow {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+}
+
+.preview {
+  border-bottom: 1px solid #eaeaea;
+  background: #fafafa;
+  padding: 10px 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.preview a {
+  text-decoration: underline;
+}
+
+header {
+  width: 100%;
+  padding: 20px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background-color: #300046;
+  transition: background-color 0.3s ease-in-out;
+  display: flex;
+  color: #ffffff;
+  justify-content: center;
+  color: white;
+}
+
+header.scrolled {
+  background-color: black;
+}
+
+.nav-link {
+  color: inherit;
+  transition: color 0.3s ease-in-out;
+  margin-right: 20px;
+  font-family: "Centra", sans-serif !important;
+  padding: 0 15px;
+  font-weight: 400;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: #cccccc;
+}
+
+@font-face {
+  font-family: "Centra";
+  src: url("/path/to/Centra-No2-Book.woff2") format("woff2"),
+    url("/path/to/Centra-No2-Book.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Centra";
+  src: url("/path/to/Centra-No2-Bold.woff2") format("woff2"),
+    url("/path/to/Centra-No2-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+.navbar,
+header {
+  font-family: "Centra", sans-serif;
+  font-weight: 400;
+}
