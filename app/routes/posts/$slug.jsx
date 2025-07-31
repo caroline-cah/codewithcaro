@@ -7,7 +7,7 @@ import { responsiveImageFragment, metaTagsFragment } from "~/lib/fragments";
 import { Avatar, links as avatarLinks } from "~/components/Avatar";
 import { Date, links as dateLinks } from "~/components/Date";
 import { Image, toRemixMeta, useQuerySubscription } from "react-datocms";
-import { CodeSpan, CodeBlock } from "./style";
+import { CodeSpan, CodeBlock, ImageBlock, Prose } from "./style";
 import Prism from "prismjs";
 import "prismjs/themes/prism.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
@@ -54,6 +54,8 @@ export const loader = async ({ request, params }) => {
               id
               image {
                 url
+                alt
+                title
               }
             }
           }
@@ -93,7 +95,7 @@ export const loader = async ({ request, params }) => {
       }
     }
     ${responsiveImageFragment}
-    ${metaTagsFragment}    
+    ${metaTagsFragment}
     `,
     variables: {
       slug: params.slug,
@@ -122,65 +124,91 @@ export default function PostSlug() {
   }, []);
 
   const renderContent = (content) => {
-    const renderedContent = [];
+    if (!content || !content.value || !content.value.document || !Array.isArray(content.value.document.children)) {
+      return <p>No content found.</p>;
+    }
+    const blocksById = {};
+    if (content.blocks && Array.isArray(content.blocks)) {
+      for (const block of content.blocks) {
+        if (block && block.id) {
+          blocksById[block.id] = block;
+        }
+      }
+    }
 
-    content.document.children.forEach((item, index) => {
+    return content.value.document.children.map((item, idx) => {
       if (item.type === "paragraph") {
-        const paragraph = item.children.map((child, childIndex) => {
-          if (child.marks && child.marks.includes("code")) {
-            return <CodeSpan key={childIndex}>{child.value}</CodeSpan>;
-          } else {
-            return <span key={childIndex}>{child.value}</span>;
-          }
-        });
+        return (
+          <p key={idx}>
+            {item.children.map((child, cIdx) =>
+              child.marks && child.marks.includes("code")
+                ? <CodeSpan key={cIdx}>{child.value}</CodeSpan>
+                : <span key={cIdx}>{child.value}</span>
+            )}
+          </p>
+        );
+      }
 
-        if (index !== 0) {
-          renderedContent.push(<br key={`br-${index}`} />);
-        }
-        renderedContent.push(<p key={index}>{paragraph}</p>);
-      } else if (item.__typename === "ImageBlockRecord") {
-        renderedContent.push(
-          <img
-            key={item.id}
-            src={item.image.url}
-            alt=""
-            className="content-image"
-          />
-        );
-      } else if (item.type === "code") {
-        const language = item.language || "javascript";
-        if (index !== 0) {
-          renderedContent.push(<br key={`br-${index}`} />);
-        }
-        renderedContent.push(
-          <CodeBlock className="line-numbers" key={index}>
-            <code className={`language-${language}`}>{item.code}</code>
-          </CodeBlock>
-        );
-      } else if (item.type.startsWith("heading")) {
+      if (item.type && item.type.startsWith("heading")) {
         const HeadingTag = `h${item.level}`;
-
-        if (index !== 0) {
-          renderedContent.push(<br key={`br-${index}`} />);
-        }
-        renderedContent.push(
-          <HeadingTag key={index}>
-            {item.children.map((child, childIndex) => (
-              <span key={childIndex}>{child.value}</span>
+        return (
+          <HeadingTag key={idx}>
+            {item.children.map((child, cIdx) => (
+              <span key={cIdx}>{child.value}</span>
             ))}
           </HeadingTag>
         );
       }
-    });
 
-    return renderedContent;
+      if (item.type === "code") {
+        const language = item.language || "javascript";
+        return (
+          <CodeBlock className="line-numbers" key={idx}>
+            <code className={`language-${language}`}>{item.code}</code>
+          </CodeBlock>
+        );
+      }
+
+      if (item.type === "block" && item.item) {
+        const block = blocksById[item.item];
+        if (block && block.image && block.image.url) {
+          return (
+            <ImageBlock key={block.id}>
+              <img
+                src={block.image.url}
+                alt={block.image.alt || ""}
+                style={{
+                  display: "block",
+                  maxWidth: "100%",
+                  margin: "2rem auto",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.04)"
+                }}
+              />
+              {block.image.title && (
+                <span className="caption" style={{
+                  display: "block",
+                  textAlign: "center",
+                  color: "#888",
+                  fontSize: "0.95em",
+                  marginTop: "0.5em"
+                }}>
+                  {block.image.title}
+                </span>
+              )}
+            </ImageBlock>
+          );
+        }
+      }
+
+      return null;
+    });
   };
+
 
   const renderYouTubeSection = () => {
     if (!post.youtube) return null;
-
     const embedUrl = `https://www.youtube.com/embed/${post.youtube.providerUid}`;
-
     return (
       <section className="section">
         <div>
@@ -230,51 +258,28 @@ export default function PostSlug() {
         <Date dateString={post.date} />
       </section>
       <section className="section--narrow">
-        <div className="prose prose-lg prose-blue">
-          {renderContent(post.content.value)}
-        </div>
+        <Prose>
+          {renderContent(post.content)}
+        </Prose>
       </section>
       {renderYouTubeSection()}
       <section className="section">
-        <ul className="grid">
-          {morePosts.map((post) => (
-            <li key={post.slug} className="grid__item">
-              <Link to={`/posts/${post.slug}`} className="grid__link">
-                <div>
-                  <Image
-                    className="grid__image"
-                    data={post.coverImage.responsiveImage}
-                  />
-                  <p className="grid__title">{post.title}</p>
-                  <Date dateString={post.date} />
-                  <p className="date">{post.excerpt}</p>
-                  <Avatar
-                    name={post.author.name}
-                    picture={post.author.picture}
-                  />
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="section">
         <div className="section__title">More posts</div>
         <ul className="grid">
-          {morePosts.map((post) => (
-            <li key={post.slug} className="grid__item">
-              <Link to={`/posts/${post.slug}`} className="grid__link">
+          {morePosts.map((p) => (
+            <li key={p.slug} className="grid__item">
+              <Link to={`/posts/${p.slug}`} className="grid__link">
                 <div>
                   <Image
                     className="grid__image"
-                    data={post.coverImage.responsiveImage}
+                    data={p.coverImage.responsiveImage}
                   />
-                  <p className="grid__title">{post.title}</p>
-                  <Date dateString={post.date} />
-                  <p className="date">{post.excerpt}</p>
+                  <p className="grid__title">{p.title}</p>
+                  <Date dateString={p.date} />
+                  <p className="date">{p.excerpt}</p>
                   <Avatar
-                    name={post.author.name}
-                    picture={post.author.picture}
+                    name={p.author.name}
+                    picture={p.author.picture}
                   />
                 </div>
               </Link>
