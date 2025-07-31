@@ -68,7 +68,7 @@ export default function Index() {
       <section className="section">
         <div className="flex">
           <h1 className="title">
-            Crafting the Web: A Dive into JavaScript, React, AWS and CSS
+            Code with Caro
           </h1>
         </div>
       </section>
